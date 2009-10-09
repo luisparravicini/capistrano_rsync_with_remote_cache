@@ -24,7 +24,8 @@ module Capistrano
           # Step 2: Update the remote cache.
           logger.trace "copying local cache to remote"
           find_servers(:except => { :no_release => true }).each do |server|
-            system("rsync #{rsync_options} --rsh='ssh -p #{ssh_port}' #{local_cache}/ #{rsync_host(server)}:#{repository_cache}/")
+            ssh_options = " -p #{ssh_port}" unless ssh_port.nil?
+            system("rsync #{rsync_options} --rsh='ssh' #{local_cache}/ #{rsync_host(server)}:#{repository_cache}/")
           end
 
           # Step 3: Copy the remote cache into place.
@@ -64,11 +65,10 @@ module Capistrano
           configuration[:rsync_options] || "-az --delete"
         end
 
-        # Port to use for rsync in step 2. If not specified with (ssh_options) in the Capfile, we
-        # use the default well-known port 22.
+        # Port to use for rsync in step 2. If not specified with (ssh_options) in the Capfile, none is used.
         # @return [Fixnum] the port to connect to with rsync
         def ssh_port
-          ssh_options[:port] || 22
+          ssh_options[:port]
         end
 
         # Get a hostname to be used in the rsync command.
